@@ -1,0 +1,84 @@
+<div id="todo">
+  <h1>To-Do List</h1>
+  <form v-on:submit.prevent="addTodo">
+    <input type="text" v-model="newTodoText" placeholder="Add new to-do"/>
+  </form>
+  
+  <ul>
+    <li v-for="todo in todos">
+      {{todo.text}}
+      <button
+       @click="removeTodo(todo.id)">Remove</button>
+    </li>
+    </ul>
+</div>
+
+<script>
+// Initialize Firebase
+var config = {
+  apiKey: "AIzaSyD4NLeNN0WEDZ2XNfVRmPRs_vZIrKhMZ1E",
+  authDomain: "to-do-list-2e5b0.firebaseapp.com",
+  databaseURL: "https://to-do-list-2e5b0.firebaseio.com",
+  projectId: "to-do-list-2e5b0",
+  storageBucket: "",
+  messagingSenderId: "430924929821"
+};
+firebase.initializeApp(config);
+
+let db = firebase.firestore();
+
+// Create Vue component
+var todoList = new Vue({
+  el: "#todo",
+  data: {
+    newTodoText: "",
+    todos: [
+      {
+        text: "Teach Firebase"
+      }
+    ]
+  },
+  created() {
+    this.fetchTodos();
+  },
+  methods: {
+    addTodo() {
+      return db
+        .collection("todos")
+        .add({
+          text: this.newTodoText
+        })
+        .then(docRef => {
+          this.newTodoText = "";
+          this.fetchTodos();
+        });
+    },
+
+    fetchTodos() {
+      return db
+        .collection("todos")
+        .get()
+        .then(querySnapshot =>
+          querySnapshot.docs.map(doc => {
+            let data = doc.data();
+            return {
+              id: doc.id,
+              text: data.text
+            };
+          })
+        )
+        .then(todos => (this.todos = todos));
+    },
+
+    removeTodo(id) {
+      return db
+        .collection("todos")
+        .doc(id)
+        .delete()
+        .then(() => {
+          return this.fetchTodos();
+        });
+    }
+  }
+});
+</script>
